@@ -1,0 +1,121 @@
+﻿@model IEnumerable<Books.Models.Book>
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2 class="text-primary">Books</h2>
+<hr />
+
+
+<a class="btn btn-primary" href="@Url.Action("Create")">
+    <i class="icofont-plus"></i>
+    <i class="bi bi-plus"></i>
+    Add New Book
+</a>
+<span id="Message" class="d-none">@TempData["Message"]</span>
+
+<hr />
+@*<div>
+        <i class="icofont-plus"></i>
+        @Html.ActionLink("Add New Book", "Create", "Books", null, new { @class = "btn btn-primary mb-2" })
+    </div>*@
+
+
+
+    <div class="alert alert-warning @(Model.Any() ? "d-none" : "")">
+        <p>There is no any books yet.</p>
+    </div>
+
+    <table class="table table-bordered @(!Model.Any() ? "d-none" : "")">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Added On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in Model)
+            {
+                <tr>
+                    <td>@Html.ActionLink(book.Title, "Details", "Books", new { id = book.Id }, null)</td>
+                    <td>@book.Author</td>
+                    <td>@book.Category.Name</td>
+                    <td>@book.Description</td>
+                    <td>@book.AddedOn</td>
+                    <td>
+                        <a class="btn btn-info" href="@Url.Action("Edit", "Books", new {id = book.Id})">
+                            <i class="icofont-edit"></i>
+                            <i class="bi bi-pencil"></i>
+                            Edit
+                        </a>
+                        <a class="btn btn-danger js-delete" href="javascript:;" data-id="@book.Id">
+                            <i class="icofont-delete"></i>
+                            <i class="bi bi-trash-fill"></i>
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            toastr.options = {
+                "preventDuplicates": true,
+            }
+            var message = $('#Message').text();
+            if (message !== '') {
+
+                toastr.success(message);
+            }
+            $(".js-delete").on("click", function () {
+                var btn = $(this);
+                //    alert(btn.data('id'));
+                bootbox.confirm({
+                    message: "Are you sure that you want to delete this book?",
+                    buttons: {
+                        confirm: {
+                            label: 'Yes',
+                            className: 'btn-danger'
+                        },
+                        cancel: {
+                            label: 'No',
+                            className: 'btn-outline-secondary'
+                        }
+                    },
+                    callback: function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: '/api/books/' + btn.data('id'),
+                                method: "DELETE",
+                                success: function () {
+                                    if ($("tbody tr").length === 1)
+                                        $("table").fadeOut(function () {
+                                            this.remove();
+                                            $(".alert").removeClass("d-none");
+                                        })
+                                    else
+                                        btn.parents('tr').fadeOut(function () {
+                                            this.remove();
+                                        });
+                                    toastr.success("Book deleted");
+                                },
+                                error: function () {
+                                    toastr.error("Something went wrong!");
+                                }
+                            })
+                        }
+                    }
+                });
+            })
+        });
+    </script>
+}
